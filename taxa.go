@@ -2,6 +2,7 @@ package ncbiutils
 
 import (
 	"bufio"
+	"bytes"
 	"io"
 	"os"
 	"path/filepath"
@@ -101,6 +102,12 @@ type GeneticCode struct {
 	Table        map[string]byte // translate table for this genetic code
 	Starts       []string        // start codon for this genetic code
 	FFCodons     map[string]bool // four-fold codons
+}
+
+func GeneticCodes() (gcMap map[string]*GeneticCode) {
+	buf := bytes.NewBufferString(GCSTRING)
+	gcMap = ReadGeneticCodes(buf)
+	return
 }
 
 func ReadGeneticCodes(f io.Reader) (gcMap map[string]*GeneticCode) {
