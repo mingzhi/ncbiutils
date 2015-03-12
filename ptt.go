@@ -58,7 +58,7 @@ func (p *PttFile) ReadAll() (ptts []Ptt) {
 		locTerms := strings.Split(fields[0], "..")
 		start, _ := strconv.Atoi(locTerms[0])
 		end, _ := strconv.Atoi(locTerms[1])
-		strand := fields[2]
+		strand := fields[1]
 		ptt := Ptt{}
 		ptt.Loc = Location{From: start, To: end, Strand: strand}
 		ptt.PID, ptt.Gene, ptt.SynonymCode, ptt.COG, ptt.Product =
