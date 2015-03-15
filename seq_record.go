@@ -2,6 +2,7 @@ package ncbiutils
 
 import (
 	"github.com/mingzhi/biogo/seq"
+	"log"
 	"os"
 	"path/filepath"
 	"strings"
@@ -36,7 +37,7 @@ func (b ByGenome) Less(i, j int) bool {
 	return b.SeqRecords[i].Genome < b.SeqRecords[j].Genome
 }
 
-func ReadSeqRecords(genome, dir string) SeqRecords {
+func ReadSeqRecords(genome, dir string, gc string) SeqRecords {
 	// Clean genome accession.
 	acc := strings.Split(genome, ".")[0]
 	// Read protein sequences in a .faa file.
@@ -84,8 +85,10 @@ func ReadSeqRecords(genome, dir string) SeqRecords {
 				sr.Prot = prot.Seq
 				sr.Nucl = nucl
 				sr.Loc = ptt.Loc
-
-				records = append(records, sr)
+				sr.Code = gc
+				if CheckCodons(sr) {
+					records = append(records, sr)
+				}
 			}
 		}
 	}
@@ -136,4 +139,48 @@ func comp(a byte) byte {
 		return 'G'
 	}
 	return 0
+}
+
+// check codons
+func CheckCodons(sr SeqRecord) (good bool) {
+	if GCTABLES == nil {
+		GCTABLES = GeneticCodes()
+	}
+	na := sr.Nucl
+	aa := sr.Prot
+	id := sr.Id
+	ncodons := len(na) / 3
+	gc := GCTABLES[sr.Code]
+
+	if ncodons < len(aa) {
+		log.Printf("%s: nucl length %d is smaller than prot sequence %d\n", id, ncodons, len(aa))
+		return
+	}
+
+	// check start codon
+	sc := string(na[0:3])
+	ok := false
+	for _, c := range gc.Starts {
+		if sc == c {
+			ok = true
+		}
+	}
+	if !ok {
+		log.Printf("%s: the first codon %s is not a start codon in table %s\n", id, sc, gc.Id)
+		return
+	}
+
+	// check following codons
+	for i := 1; i < len(aa); i++ {
+		c := string(na[i*3 : (i+1)*3])
+		a := aa[i]
+		if a != gc.Table[c] {
+			log.Printf("%s: the codon at %d (%s) is not corresponed to %s\n", id, i, c, string(a))
+			return
+		}
+	}
+
+	good = true
+
+	return
 }

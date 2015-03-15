@@ -9,6 +9,8 @@ import (
 	"strings"
 )
 
+var GCTABLES map[string]*GeneticCode
+
 type Taxa struct {
 	Id               string       // node id in GenBank taxonomy database
 	Name             string       // the unique variant of names
